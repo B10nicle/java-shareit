@@ -1,2 +1,3 @@
-# java-shareit
-Template repository for Shareit project.
+## Яндекс Практикум: проект "ShareIt"
+
+Технологии: Java + Spring Boot + Maven + Lombok + JUnit + RESTful API
