@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author Oleg Khilko
  */
@@ -11,11 +13,10 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-public class ItemDto {
+public class CommentDto {
     private Long id;
-    private final String name;
-    private final String description;
-    private final Boolean available;
-    private final Long ownerId;
-    private Long requestId;
+    private String text;
+    private Long itemId;
+    private String authorName;
+    private LocalDateTime created;
 }

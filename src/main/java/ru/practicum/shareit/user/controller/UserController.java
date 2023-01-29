@@ -1,12 +1,10 @@
 package ru.practicum.shareit.user.controller;
 
 import ru.practicum.shareit.user.service.UserService;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 
-import java.util.stream.Collectors;
 import java.util.List;
 
 /**
@@ -21,21 +19,18 @@ public class UserController {
 
     @PostMapping()
     public UserDto create(@RequestBody UserDto userDto) {
-        var user = userService.create(UserMapper.toUser(userDto));
-        return UserMapper.toUserDto(user);
+        return userService.save(userDto);
     }
 
     @PatchMapping("/{userId}")
     public UserDto update(@RequestBody UserDto userDto,
                           @PathVariable Long userId) {
-        var user = UserMapper.toUser(userDto);
-        user.setId(userId);
-        return UserMapper.toUserDto(userService.update(user));
+        return userService.update(userDto, userId);
     }
 
     @GetMapping("/{userId}")
     public UserDto get(@PathVariable Long userId) {
-        return UserMapper.toUserDto(userService.get(userId));
+        return userService.get(userId);
     }
 
     @DeleteMapping("/{userId}")
@@ -45,9 +40,6 @@ public class UserController {
 
     @GetMapping()
     public List<UserDto> getAll() {
-        return userService.getAll()
-                .stream()
-                .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
+        return userService.getAll();
     }
 }
