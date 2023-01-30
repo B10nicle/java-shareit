@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author Oleg Khilko
  */
@@ -13,7 +15,11 @@ import lombok.Data;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingDto {
+public class BookingSavingDto {
     private Long id;
-    private Long bookerId;
+    private LocalDateTime start;
+    private LocalDateTime end;
+    private Long itemId;
+    private Long booker;
+    private String status;
 }

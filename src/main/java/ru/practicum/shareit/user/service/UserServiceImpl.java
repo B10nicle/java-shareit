@@ -1,15 +1,22 @@
 package ru.practicum.shareit.user.service;
 
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.hibernate.exception.ConstraintViolationException;
+import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.error.ValidationException;
 import ru.practicum.shareit.error.NotFoundException;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.error.EmailException;
-import ru.practicum.shareit.user.dao.UserStorage;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.user.User;
-import lombok.RequiredArgsConstructor;
+import ru.practicum.shareit.user.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
 
 import java.util.List;
+
+import static ru.practicum.shareit.user.mapper.UserMapper.*;
+import static java.util.stream.Collectors.*;
 
 /**
  * @author Oleg Khilko
@@ -17,61 +24,72 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
-    private long id = 0;
+    private final UserRepository userRepository;
 
     @Override
-    public User create(User user) {
-        validate(user);
-        if (getAll().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
-            throw new EmailException("User with ID #" + user.getEmail() + " is already exist.");
+    @Transactional
+    public UserDto save(UserDto userDto) {
+        validate(userDto);
+        try {
+            return toUserDto(userRepository.save(toUser(userDto)));
+        } catch (DataIntegrityViolationException e) {
+            if (e.getCause() instanceof ConstraintViolationException) {
+                throw new EmailException("User with email: " + userDto.getEmail() + " is already exist.");
+            }
         }
-        user.setId(generateId());
-        return userStorage.create(user);
+        return null;
     }
 
     @Override
-    public User update(User user) {
-        if (getAll().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
-            throw new EmailException("User with ID #" + user.getEmail() + " is already exist.");
+    @Transactional
+    public UserDto update(UserDto userDto, Long userId) {
+        var user = userRepository.findById(userId).orElseThrow(() -> {
+            throw new NotFoundException("User with ID #" + userId + " does not exist.");
+        });
+        if (userDto.getName() != null) user.setName(userDto.getName());
+        if (userDto.getEmail() != null) user.setEmail(userDto.getEmail());
+
+        try {
+            return toUserDto(userRepository.save(user));
+        } catch (DataIntegrityViolationException e) {
+            if (e.getCause() instanceof ConstraintViolationException) {
+                throw new EmailException("User with email: " + userDto.getEmail() + " is already exist.");
+            }
         }
-        var userToUpdate = get(user.getId());
-        if (user.getName() != null) userToUpdate.setName(user.getName());
-        if (user.getEmail() != null) userToUpdate.setEmail(user.getEmail());
-        return userStorage.update(userToUpdate);
+        return null;
     }
 
     @Override
-    public User get(Long id) {
-        if (id == null) throw new ValidationException("User ID cannot be null.");
-        return userStorage.get(id).orElseThrow(() -> {
-            throw new NotFoundException("User with ID #" + id + " does not exist.");
+    public UserDto get(Long userId) {
+        if (userId == null) throw new ValidationException("User ID cannot be null.");
+        var user = userRepository.findById(userId).orElseThrow(() -> {
+            throw new NotFoundException("User with ID #" + userId + " does not exist.");
         });
+        return toUserDto(user);
     }
 
     @Override
-    public void delete(Long id) {
-        if (id == null) throw new ValidationException("User ID cannot be null.");
-        userStorage.delete(id).orElseThrow(() -> {
-            throw new NotFoundException("User with ID #" + id + " does not exist.");
-        });
+    @Transactional
+    public void delete(Long userId) {
+        if (userId == null) throw new ValidationException("User ID cannot be null.");
+        userRepository.deleteById(userId);
     }
 
     @Override
-    public List<User> getAll() {
-        return userStorage.getAll();
+    public List<UserDto> getAll() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserMapper::toUserDto)
+                .collect(toList());
     }
 
-    private long generateId() {
-        return ++id;
-    }
-
-    private void validate(User user) {
-        if (user.getEmail() == null)
+    private void validate(UserDto userDto) {
+        if (userDto.getEmail() == null)
             throw new ValidationException("Email cannot be empty.");
-        if (user.getEmail().isBlank() || !user.getEmail().contains("@"))
-            throw new ValidationException("Incorrect email: " + user.getEmail() + ".");
+        if (userDto.getEmail().isBlank() || !userDto.getEmail().contains("@"))
+            throw new ValidationException("Incorrect email: " + userDto.getEmail() + ".");
     }
 }
