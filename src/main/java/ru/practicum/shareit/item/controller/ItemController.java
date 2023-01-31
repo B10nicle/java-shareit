@@ -61,10 +61,10 @@ public class ItemController {
     }
 
     @PostMapping("{itemId}/comment")
-    public CommentDto createComment(@RequestBody CommentDto commentDto,
+    public CommentDto saveComment(@RequestBody CommentDto commentDto,
                                     @PathVariable Long itemId,
                                     @RequestHeader(value = "X-Sharer-User-Id", required = false)
                                     Long userId) {
-        return itemService.createComment(commentDto, itemId, userId);
+        return itemService.saveComment(commentDto, itemId, userId);
     }
 }

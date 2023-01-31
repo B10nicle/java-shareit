@@ -114,9 +114,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public CommentDto createComment(CommentDto commentDto,
-                                    Long itemId,
-                                    Long userId) {
+    public CommentDto saveComment(CommentDto commentDto,
+                                  Long itemId,
+                                  Long userId) {
         if (commentDto.getText() == null || commentDto.getText().isBlank())
             throw new ValidationException("Comment text cannot be blank");
         var item = itemRepository.findById(itemId).orElseThrow(

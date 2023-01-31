@@ -23,7 +23,7 @@ public interface ItemService {
 
     List<ItemDto> search(String text, Long userId);
 
-    CommentDto createComment(CommentDto comment, Long itemId, Long userId);
+    CommentDto saveComment(CommentDto comment, Long itemId, Long userId);
 
     List<CommentDto> getAllComments();
 }
