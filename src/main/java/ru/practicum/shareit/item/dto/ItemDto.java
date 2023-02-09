@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,12 +11,13 @@ import lombok.Data;
 
 @Data
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class ItemDto {
     private Long id;
-    private final String name;
-    private final String description;
-    private final Boolean available;
-    private final Long ownerId;
+    private String name;
+    private String description;
+    private Boolean available;
+    private Long ownerId;
     private Long requestId;
 }

@@ -1,4 +1,4 @@
-package ru.practicum.shareit.request;
+package ru.practicum.shareit.request.model;
 
 import ru.practicum.shareit.user.model.User;
 import org.hibernate.Hibernate;
@@ -8,16 +8,19 @@ import java.time.LocalDateTime;
 import javax.persistence.*;
 import java.util.Objects;
 
+import static javax.persistence.GenerationType.*;
+
 @Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "requests")
 public class ItemRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @Column(nullable = false)

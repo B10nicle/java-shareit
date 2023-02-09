@@ -8,13 +8,13 @@ import ru.practicum.shareit.item.model.Comment;
  */
 
 public class CommentMapper {
-    public static Comment toComment(CommentDto commentDto) {
+    public static Comment mapToComment(CommentDto commentDto) {
         return Comment.builder()
                 .text(commentDto.getText())
                 .build();
     }
 
-    public static CommentDto toCommentDto(Comment comment) {
+    public static CommentDto mapToCommentDto(Comment comment) {
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())

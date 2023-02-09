@@ -2,12 +2,15 @@ package ru.practicum.shareit.item.service;
 
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.booking.dto.BookingAllFieldsDto;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.error.ValidationException;
 import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.mapper.CommentMapper;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.error.NotFoundException;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -15,20 +18,22 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import org.springframework.data.domain.Sort;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.util.stream.Stream;
 import java.util.List;
-import java.util.Map;
 
 import static ru.practicum.shareit.booking.enums.BookingTimeState.*;
 import static ru.practicum.shareit.item.mapper.CommentMapper.*;
 import static ru.practicum.shareit.item.mapper.ItemMapper.*;
 import static ru.practicum.shareit.user.mapper.UserMapper.*;
+import static ru.practicum.shareit.utils.Pagination.*;
 import static java.util.stream.Collectors.*;
+import static java.time.LocalDateTime.*;
 import static java.util.Collections.*;
+import static java.util.Comparator.*;
 
 /**
  * @author Oleg Khilko
@@ -46,13 +51,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto save(ItemDto itemDto, Long userId) {
+    public ItemDto save(ItemDto itemDto, ItemRequestDto itemRequestDto, Long userId) {
         validate(itemDto);
-        var user = toUser(userService.get(userId));
-        var item = toItem(itemDto);
+        var user = mapToUser(userService.get(userId));
+        var item = mapToItem(itemDto);
         item.setOwner(user);
+        if (itemRequestDto != null)
+            item.setRequest(ItemRequestMapper.mapToItemRequest(
+                    itemRequestDto, userService.get(itemRequestDto.getRequesterId())));
         var save = itemRepository.save(item);
-        return toItemDto(save);
+        return mapToItemDto(save);
     }
 
     @Override
@@ -70,20 +78,19 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null)
             item.setAvailable(itemDto.getAvailable());
         var save = itemRepository.save(item);
-        return toItemDto(save);
+        return mapToItemDto(save);
     }
 
     @Override
     public ItemAllFieldsDto get(Long id, Long userId) {
         var item = itemRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Item with id#" + id + " does not exist"));
-        var comments = getAllComments().stream()
-                .collect(groupingBy(CommentDto::getItemId));
+        var comments = getAllComments(id);
         var bookings = bookingService.getBookingsByItem(item.getId(), userId);
-        return toItemAllFieldsDto(item,
+        return mapToItemAllFieldsDto(item,
                 getLastItem(bookings),
                 getNextItem(bookings),
-                comments.get(item.getId()));
+                comments);
     }
 
     @Override
@@ -92,23 +99,37 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemAllFieldsDto> getAllItems(Long userId) {
+    public List<ItemAllFieldsDto> getAllItems(Long userId, Integer from, Integer size) {
+        Stream<Item> stream;
         if (userId == null) throw new ValidationException("User ID cannot be null");
+        var bookings = bookingService.getBookingsByOwnerId(userId, null)
+                .stream()
+                .collect(groupingBy((BookingAllFieldsDto bookingAllFieldsDto) -> bookingAllFieldsDto.getItem().getId()));
         var comments = getAllComments().stream()
                 .collect(groupingBy(CommentDto::getItemId));
-        var bookings = bookingService.getBookingsByOwner(userId, null).stream()
-                .collect(groupingBy((BookingAllFieldsDto bookingExtendedDto) -> bookingExtendedDto.getItem().getId()));
-        return itemRepository.findAllByOwner_IdIs(userId).stream()
-                .map(item -> getItemAllFieldsDto(comments, bookings, item))
+        var pageRequest = makePageRequest(from, size, Sort.by("id").ascending());
+        if (pageRequest == null)
+            stream = itemRepository.findAllByOwner_IdIs(userId).stream();
+        else
+            stream = itemRepository.findAllByOwner_IdIs(userId, pageRequest).stream();
+        return stream.map(item -> ItemMapper.mapToItemAllFieldsDto(item,
+                        getLastItem(bookings.get(item.getId())),
+                        getNextItem(bookings.get(item.getId())),
+                        comments.get(item.getId())))
                 .collect(toList());
     }
 
     @Override
-    public List<ItemDto> search(String text, Long userId) {
+    public List<ItemDto> search(String text, Long userId, Integer from, Integer size) {
+        Stream<Item> stream;
         if (text.isBlank()) return emptyList();
-        return itemRepository.search(text)
-                .stream()
-                .map(ItemMapper::toItemDto)
+        var pageRequest = makePageRequest(from, size, Sort.by("id").ascending());
+        if (pageRequest == null)
+            stream = itemRepository.search(text).stream();
+        else
+            stream = itemRepository.search(text, pageRequest).stream();
+        return stream
+                .map(ItemMapper::mapToItemDto)
                 .collect(toList());
     }
 
@@ -121,32 +142,67 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Comment text cannot be blank");
         var item = itemRepository.findById(itemId).orElseThrow(
                 () -> new NotFoundException("Item with id#" + itemId + " does not exist"));
-        var user = toUser(userService.get(userId));
-        var bookings = bookingService.getAll(userId, PAST.name());
+        var user = mapToUser(userService.get(userId));
+        var bookings = bookingService.getAllBookings(userId, PAST.name());
         if (bookings.isEmpty()) throw new ValidationException("User cannot make comments");
-        var comment = toComment(commentDto);
+        var comment = mapToComment(commentDto);
         comment.setItem(item);
         comment.setAuthor(user);
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(now());
         var save = commentRepository.save(comment);
-        return toCommentDto(save);
+        return mapToCommentDto(save);
     }
 
     @Override
     public List<CommentDto> getAllComments() {
         return commentRepository.findAll()
                 .stream()
-                .map(CommentMapper::toCommentDto)
+                .map(CommentMapper::mapToCommentDto)
                 .collect(toList());
     }
 
-    private ItemAllFieldsDto getItemAllFieldsDto(Map<Long, List<CommentDto>> comments,
-                                                 Map<Long, List<BookingAllFieldsDto>> bookings,
-                                                 Item item) {
-        return toItemAllFieldsDto(item,
-                getLastItem(bookings.get(item.getId())),
-                getNextItem(bookings.get(item.getId())),
-                comments.get(item.getId()));
+    @Override
+    public List<CommentDto> getAllComments(Long itemId) {
+        return commentRepository.findCommentByItem_IdIsOrderByCreated(itemId)
+                .stream()
+                .map(CommentMapper::mapToCommentDto)
+                .collect(toList());
+    }
+
+    @Override
+    public List<ItemDto> getItemsByRequestId(Long requestId) {
+        return itemRepository.findAllByRequest_IdIs(requestId)
+                .stream()
+                .map(ItemMapper::mapToItemDto)
+                .collect(toList());
+    }
+
+    @Override
+    public List<ItemDto> getItemsByRequests(List<ItemRequest> requests) {
+        return itemRepository.findAllByRequestIn(requests)
+                .stream()
+                .map(ItemMapper::mapToItemDto)
+                .collect(toList());
+    }
+
+    private BookingAllFieldsDto getNextItem(List<BookingAllFieldsDto> bookings) {
+        if (bookings != null)
+            return bookings.stream()
+                    .filter(booking -> booking.getStart().isAfter(now()))
+                    .min(comparing(BookingAllFieldsDto::getEnd))
+                    .orElse(null);
+        else
+            return null;
+    }
+
+    private BookingAllFieldsDto getLastItem(List<BookingAllFieldsDto> bookings) {
+        if (bookings != null)
+            return bookings.stream()
+                    .filter(booking -> booking.getEnd().isBefore(now()))
+                    .max(comparing(BookingAllFieldsDto::getEnd))
+                    .orElse(null);
+        else
+            return null;
     }
 
     private void validate(ItemDto item) {
@@ -156,21 +212,5 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Description cannot be blank");
         if (item.getAvailable() == null)
             throw new ValidationException("Available cannot be null");
-    }
-
-    private BookingAllFieldsDto getNextItem(List<BookingAllFieldsDto> bookings) {
-        return bookings != null
-                ? bookings.stream()
-                .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
-                .min(Comparator.comparing(BookingAllFieldsDto::getEnd)).orElse(null)
-                : null;
-    }
-
-    private BookingAllFieldsDto getLastItem(List<BookingAllFieldsDto> bookings) {
-        return bookings != null
-                ? bookings.stream()
-                .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now()))
-                .max(Comparator.comparing(BookingAllFieldsDto::getEnd)).orElse(null)
-                : null;
     }
 }

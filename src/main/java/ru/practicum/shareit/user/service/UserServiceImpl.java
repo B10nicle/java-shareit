@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     public UserDto save(UserDto userDto) {
         validate(userDto);
         try {
-            return toUserDto(userRepository.save(toUser(userDto)));
+            return mapToUserDto(userRepository.save(mapToUser(userDto)));
         } catch (DataIntegrityViolationException e) {
             if (e.getCause() instanceof ConstraintViolationException) {
                 throw new EmailException("User with email: " + userDto.getEmail() + " is already exist.");
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getEmail() != null) user.setEmail(userDto.getEmail());
 
         try {
-            return toUserDto(userRepository.save(user));
+            return mapToUserDto(userRepository.save(user));
         } catch (DataIntegrityViolationException e) {
             if (e.getCause() instanceof ConstraintViolationException) {
                 throw new EmailException("User with email: " + userDto.getEmail() + " is already exist.");
@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
         var user = userRepository.findById(userId).orElseThrow(() -> {
             throw new NotFoundException("User with ID #" + userId + " does not exist.");
         });
-        return toUserDto(user);
+        return mapToUserDto(user);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         return userRepository.findAll()
                 .stream()
-                .map(UserMapper::toUserDto)
+                .map(UserMapper::mapToUserDto)
                 .collect(toList());
     }
 

@@ -1,12 +1,14 @@
 package ru.practicum.shareit.item.model;
 
-import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 import org.hibernate.Hibernate;
 import lombok.*;
 
 import javax.persistence.*;
 import java.util.Objects;
+
+import static javax.persistence.GenerationType.*;
 
 /**
  * @author Oleg Khilko
@@ -22,7 +24,7 @@ import java.util.Objects;
 @Table(name = "items")
 public class Item {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @Column(nullable = false)
