@@ -10,6 +10,10 @@ import java.util.Objects;
 
 import static javax.persistence.GenerationType.*;
 
+/**
+ * @author Oleg Khilko
+ */
+
 @Entity
 @Getter
 @Setter

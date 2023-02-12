@@ -46,7 +46,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ItemRequestDto> getAll(Integer from, Integer size, Long userId) {
+    public List<ItemRequestDto> getAllItemRequests(Integer from, Integer size, Long userId) {
         List<ItemRequest> requests;
         var pageRequest = makePageRequest(from, size, Sort.by("created").descending());
         if (pageRequest == null) {

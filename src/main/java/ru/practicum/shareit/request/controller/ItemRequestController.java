@@ -27,7 +27,7 @@ public class ItemRequestController {
     public List<ItemRequestDto> getAllItemRequests(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
                                                    @RequestParam(required = false) Integer from,
                                                    @RequestParam(required = false) Integer size) {
-        return itemRequestService.getAll(from, size, userId);
+        return itemRequestService.getAllItemRequests(from, size, userId);
     }
 
     @PostMapping()
