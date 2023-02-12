@@ -5,6 +5,8 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.error.ValidationException;
+import ru.practicum.shareit.error.NotFoundException;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -112,5 +114,37 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class))
                 .andExpect(jsonPath("$.items", nullValue()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getItemRequestNotFoundExceptionTest() throws Exception {
+        when(itemRequestService.getItemRequestById(anyInt(), anyLong()))
+                .thenThrow(NotFoundException.class);
+        mvc.perform(get("/requests/{requestId}", 1)
+                        .header(headerSharerUserId, 27))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getItemRequestsWithNotFoundException() throws Exception {
+        when(itemRequestService.getAllItemRequests(anyLong()))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(get("/requests")
+                        .header(headerSharerUserId, 1))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveItemRequestValidationExceptionTest() throws Exception {
+        when(itemRequestService.save(any(), anyLong()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(post("/requests")
+                        .header(headerSharerUserId, 1)
+                        .content(mapper.writeValueAsString(itemRequestDto))
+                        .contentType(APPLICATION_JSON)
+                        .characterEncoding(UTF_8)
+                        .accept(APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }

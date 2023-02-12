@@ -70,6 +70,7 @@ class UserServiceUnitTest {
                 .thenThrow(EmailException.class);
         assertThrows(EmailException.class,
                 () -> userService.save(userDto));
+
     }
 
     @Test
@@ -144,7 +145,7 @@ class UserServiceUnitTest {
 
     @Test
     void updateUserSameEmailTest() {
-        var dto = new UserDto(2L, "Tommy", "tommy@mail.com");
+        var dto = new UserDto(2L, "Paul", "paul@mail.com");
         when(userRepository.findById(any()))
                 .thenReturn(ofNullable(mapToUser(dto)));
         when(userRepository.save(any()))

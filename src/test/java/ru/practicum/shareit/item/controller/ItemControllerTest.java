@@ -4,8 +4,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import ru.practicum.shareit.error.ValidationException;
 import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.error.NotFoundException;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -70,7 +72,7 @@ class ItemControllerTest {
             .build();
 
     @Test
-    void save() throws Exception {
+    void saveTest() throws Exception {
         when(itemService.save(any(), any(), anyLong()))
                 .thenReturn(itemDto);
         mvc.perform(post("/items")
@@ -87,7 +89,33 @@ class ItemControllerTest {
     }
 
     @Test
-    void getAllItems() throws Exception {
+    void saveItemRequestDtoIsNullTest() throws Exception {
+        var itemDto2 = ItemDto.builder()
+                .id(1L)
+                .name("pen")
+                .description("blue pen")
+                .available(true)
+                .ownerId(1L)
+                .requestId(null)
+                .build();
+
+        when(itemService.save(any(), any(), anyLong()))
+                .thenReturn(itemDto2);
+        mvc.perform(post("/items")
+                        .content(mapper.writeValueAsString(itemDto2))
+                        .header(headerSharerUserId, 1)
+                        .contentType(APPLICATION_JSON)
+                        .characterEncoding(UTF_8)
+                        .accept(APPLICATION_JSON)
+                )
+                .andExpect(jsonPath("$.description", is(itemDto2.getDescription())))
+                .andExpect(jsonPath("$.id", is(itemDto2.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(itemDto2.getName())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getAllItemsTest() throws Exception {
         when(itemService.getAllItems(anyLong(), anyInt(), anyInt()))
                 .thenReturn(of(itemExtendedDto));
         mvc.perform(get("/items")
@@ -103,7 +131,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItem() throws Exception {
+    void getItemTest() throws Exception {
         when(itemService.get(any(), anyLong()))
                 .thenReturn(itemExtendedDto);
         mvc.perform(get("/items/{itemId}", 1)
@@ -116,7 +144,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void update() throws Exception {
+    void updateTest() throws Exception {
         when(itemService.update(any(), anyLong()))
                 .thenReturn(itemDto);
         mvc.perform(patch("/items/{itemId}", 1)
@@ -141,7 +169,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void saveComment() throws Exception {
+    void saveCommentTest() throws Exception {
         when(itemService.saveComment(any(CommentDto.class), anyLong(), anyLong()))
                 .thenReturn(commentDto);
         mvc.perform(post("/items/{itemId}/comment", 1)
@@ -158,7 +186,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void search() throws Exception {
+    void searchTest() throws Exception {
         when(itemService.search(anyString(), anyLong(), anyInt(), anyInt()))
                 .thenReturn(of(itemDto));
         mvc.perform(get("/items/search")
@@ -172,5 +200,57 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].name", is(itemDto.getName())))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void saveValidationExceptionTest() throws Exception {
+        when(itemService.save(any(), any(), anyLong()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(post("/items")
+                        .header(headerSharerUserId, 1)
+                        .content(mapper.writeValueAsString(itemDto))
+                        .contentType(APPLICATION_JSON)
+                        .characterEncoding(UTF_8)
+                        .accept(APPLICATION_JSON)
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateNotFoundExceptionTest() throws Exception {
+        when(itemService.update(any(), anyLong()))
+                .thenThrow(NotFoundException.class);
+        mvc.perform(patch("/items/{itemId}", 1)
+                        .header(headerSharerUserId, 1)
+                        .content(mapper.writeValueAsString(itemDto))
+                        .contentType(APPLICATION_JSON)
+                        .characterEncoding(UTF_8)
+                        .accept(APPLICATION_JSON)
+                )
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getNotFoundExceptionTest() throws Exception {
+        when(itemService.get(any(), anyLong()))
+                .thenThrow(NotFoundException.class);
+        mvc.perform(get("/items/{itemId}", 1)
+                        .header(headerSharerUserId, 1)
+                )
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveCommentValidationExceptionTest() throws Exception {
+        when(itemService.saveComment(any(CommentDto.class), anyLong(), anyLong()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(post("/items/{itemId}/comment", 1)
+                        .header(headerSharerUserId, 1)
+                        .content(mapper.writeValueAsString(commentDto))
+                        .contentType(APPLICATION_JSON)
+                        .characterEncoding(UTF_8)
+                        .accept(APPLICATION_JSON)
+                )
+                .andExpect(status().isBadRequest());
     }
 }

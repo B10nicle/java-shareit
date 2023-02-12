@@ -260,4 +260,17 @@ class BookingControllerTest {
                 )
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void getAllBookingsInternalServerErrorTest() throws Exception {
+        when(bookingService.getAllBookings(anyLong(), anyString(), anyInt(), anyInt()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(get("/bookings")
+                        .header(headerSharerUserId, 1)
+                        .param("state", "All")
+                        .param("size", "10000000000")
+                        .param("from", "0")
+                )
+                .andExpect(status().is5xxServerError());
+    }
 }

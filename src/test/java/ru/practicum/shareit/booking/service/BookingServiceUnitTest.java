@@ -21,6 +21,7 @@ import static ru.practicum.shareit.booking.enums.BookingTimeState.*;
 import static ru.practicum.shareit.booking.enums.BookingState.*;
 import static ru.practicum.shareit.item.mapper.ItemMapper.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.data.domain.Page.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static java.util.Optional.ofNullable;
@@ -357,21 +358,6 @@ class BookingServiceUnitTest {
     }
 
     @Test
-    void getAllBookingsAllStateTest() {
-        saveBookingDto();
-        when(bookingRepository.findBookingsByBookerIsOrderByStartDesc(any()))
-                .thenReturn(of(booking));
-        var bookings = bookingService.getAllBookings(
-                userDto.getId(),
-                ALL.name(),
-                null,
-                null
-        );
-        assertEquals(bookings.get(0).getId(), booking.getId());
-        assertEquals(bookings.size(), 1);
-    }
-
-    @Test
     void getAllBookingsWithNotValidStateTest() {
         saveBookingDto();
         var exception = assertThrows(ValidationException.class,
@@ -518,19 +504,6 @@ class BookingServiceUnitTest {
     }
 
     @Test
-    void getBookingsByOwnerIdInvalidStateTest() {
-        saveBookingDto();
-        var exception = assertThrows(ValidationException.class,
-                () -> bookingService.getBookingsByOwnerId(
-                        userDto.getId(),
-                        "Unknown",
-                        null,
-                        null)
-        );
-        assertEquals("Unknown state: Unknown", exception.getMessage());
-    }
-
-    @Test
     void getBookingsByOwnerIdFutureStateTest() {
         saveBookingDto();
         when(bookingRepository.findBookingsByItemOwnerAndStartAfterOrderByStartDesc(any(), any()))
@@ -596,5 +569,241 @@ class BookingServiceUnitTest {
         );
         assertEquals(bookings.get(0).getId(), booking.getId());
         assertEquals(bookings.size(), 1);
+    }
+
+    @Test
+    void getAllBookingsPaginationFutureTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStartIsAfterOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                FUTURE.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsPaginationAllTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsOrderByStartDesc(any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                ALL.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsPaginationPastTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndEndBeforeOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                PAST.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsPaginationCurrentTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStartBeforeAndEndAfterOrderByStartDesc(any(), any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                CURRENT.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsPaginationAnyTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStatusIsOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                CANCELED.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPastTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerAndEndBeforeOrderByStartDesc(any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                PAST.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdCurrentTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerIsAndStartBeforeAndEndAfterOrderByStartDesc(any(), any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                CURRENT.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdFutureTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerAndStartAfterOrderByStartDesc(any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                FUTURE.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdAnyTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerIsAndStatusIsOrderByStartDesc(any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                CANCELED.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPaginationNotNullTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerIsOrderByStartDesc(any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                ALL.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPaginationPastTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerAndEndBeforeOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                PAST.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPaginationCurrentTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerIsAndStartBeforeAndEndAfterOrderByStartDesc(any(), any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                CURRENT.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPaginationFutureTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerAndStartAfterOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                FUTURE.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getBookingsByOwnerIdPaginationAnyTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByItemOwnerIsAndStatusIsOrderByStartDesc(any(), any(), any()))
+                .thenReturn(empty());
+        var bookings = bookingService.getBookingsByOwnerId(
+                userDto.getId(),
+                CANCELED.name(),
+                0,
+                2
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsAllTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsOrderByStartDesc(any()))
+                .thenReturn(of());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                ALL.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsCurrentTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStartBeforeAndEndAfterOrderByStartDesc(any(), any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                CURRENT.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsFutureTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStartIsAfterOrderByStartDesc(any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                FUTURE.name()
+        );
+        assertEquals(bookings.size(), 0);
+    }
+
+    @Test
+    void getAllBookingsAnyTest() {
+        saveBookingDto();
+        when(bookingRepository.findBookingsByBookerIsAndStatusIsOrderByStartDesc(any(), any()))
+                .thenReturn(of());
+        var bookings = bookingService.getAllBookings(
+                userDto.getId(),
+                CANCELED.name()
+        );
+        assertEquals(bookings.size(), 0);
     }
 }

@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.practicum.shareit.error.EmailException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import javax.transaction.Transactional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
@@ -40,6 +42,20 @@ class UserServiceImplTest {
         userService.save(saveUserDto("John", "john@mail.com"));
         userService.save(saveUserDto("Bobby", "bobby@mail.com"));
         userService.save(saveUserDto("Clare", "clare@mail.com"));
+    }
+
+    @Test
+    void emailExceptionTest() {
+        userService.save(saveUserDto("Jack", "jack@mail.com"));
+        var exception = assertThrows(EmailException.class,
+                () -> userService.save(saveUserDto("Jack", "jack@mail.com")));
+        assertEquals("User with email: " + userDto.getEmail() + " is already exist.", exception.getMessage());
+    }
+
+    @Test
+    void nullTest() {
+        var dto = userService.save(saveUserDto("Jack", "jack@mail.com"));
+        assertNotEquals(null, dto);
     }
 
     @Test

@@ -1,12 +1,10 @@
 package ru.practicum.shareit.request.model;
 
 import ru.practicum.shareit.user.model.User;
-import org.hibernate.Hibernate;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import javax.persistence.*;
-import java.util.Objects;
 
 import static javax.persistence.GenerationType.*;
 
@@ -36,17 +34,4 @@ public class ItemRequest {
 
     @Column(name = "created", nullable = false)
     private LocalDateTime created;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        ItemRequest that = (ItemRequest) o;
-        return id != null && Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

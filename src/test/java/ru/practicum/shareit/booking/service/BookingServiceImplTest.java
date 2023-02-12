@@ -109,29 +109,6 @@ class BookingServiceImplTest {
                 equalTo(bookingAllFieldsDto.getItem().getId()));
     }
 
-/*    @Test
-    void approveTest() {
-        var approved = bookingService.approve(
-                bookingAllFieldsDto.getId(),
-                true,
-                bookingAllFieldsDto.getItem().getOwnerId()
-        );
-        var booking = entityManager
-                .createQuery(
-                        "SELECT booking " +
-                                "FROM Booking booking",
-                        Booking.class)
-                .getSingleResult();
-        assertThat(booking.getBooker().getId(),
-                equalTo(approved.getBooker().getId()));
-        assertThat(booking.getItem().getId(),
-                equalTo(approved.getItem().getId()));
-        assertThat(booking.getStatus().name(),
-                equalTo(approved.getStatus()));
-        assertThat(booking.getId(),
-                equalTo(approved.getId()));
-    }*/
-
     @Test
     void getAllBookingsTest() {
         var approved = bookingService.getAllBookings(
