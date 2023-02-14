@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.controller;
 
+import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.item.dto.ItemAllFieldsDto;
 import ru.practicum.shareit.item.service.ItemService;
 import org.springframework.web.bind.annotation.*;
@@ -17,28 +18,30 @@ import java.util.List;
 @AllArgsConstructor
 @RequestMapping("/items")
 public class ItemController {
+    private final String headerSharerUserId = "X-Sharer-User-Id";
+    private final ItemRequestService itemRequestService;
     private final ItemService itemService;
 
     @PostMapping()
-    public ItemDto save(@RequestBody ItemDto itemDto,
-                        @RequestHeader(value = "X-Sharer-User-Id", required = false)
-                        Long userId) {
-        return itemService.save(itemDto, userId);
+    public ItemDto save(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                        @RequestBody ItemDto itemDto) {
+        var itemRequestDto = itemDto.getRequestId() != null
+                ? itemRequestService.getItemRequestById(itemDto.getRequestId(), userId)
+                : null;
+        return itemService.save(itemDto, itemRequestDto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestBody ItemDto itemDto,
-                          @PathVariable Long itemId,
-                          @RequestHeader(value = "X-Sharer-User-Id", required = false)
-                          Long userId) {
+    public ItemDto update(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                          @RequestBody ItemDto itemDto,
+                          @PathVariable Long itemId) {
         itemDto.setId(itemId);
         return itemService.update(itemDto, userId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemAllFieldsDto get(@PathVariable Long itemId,
-                                @RequestHeader(value = "X-Sharer-User-Id", required = false)
-                                Long userId) {
+    public ItemAllFieldsDto get(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                                @PathVariable Long itemId) {
         return itemService.get(itemId, userId);
     }
 
@@ -48,23 +51,24 @@ public class ItemController {
     }
 
     @GetMapping()
-    public List<ItemAllFieldsDto> getAllItems(@RequestHeader(value = "X-Sharer-User-Id", required = false)
-                                              Long userId) {
-        return itemService.getAllItems(userId);
+    public List<ItemAllFieldsDto> getAllItems(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                                              @RequestParam(required = false) Integer from,
+                                              @RequestParam(required = false) Integer size) {
+        return itemService.getAllItems(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> search(@RequestHeader(value = "X-Sharer-User-Id", required = false)
-                                @RequestParam(required = false) String text,
-                                Long userId) {
-        return itemService.search(text, userId);
+    public List<ItemDto> search(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                                @RequestParam(required = false) Integer from,
+                                @RequestParam(required = false) Integer size,
+                                @RequestParam(required = false) String text) {
+        return itemService.search(text, userId, from, size);
     }
 
     @PostMapping("{itemId}/comment")
-    public CommentDto saveComment(@RequestBody CommentDto commentDto,
-                                    @PathVariable Long itemId,
-                                    @RequestHeader(value = "X-Sharer-User-Id", required = false)
-                                    Long userId) {
+    public CommentDto saveComment(@RequestHeader(value = headerSharerUserId, required = false) Long userId,
+                                  @RequestBody CommentDto commentDto,
+                                  @PathVariable Long itemId) {
         return itemService.saveComment(commentDto, itemId, userId);
     }
 }

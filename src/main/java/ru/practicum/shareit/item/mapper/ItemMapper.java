@@ -14,7 +14,7 @@ import java.util.List;
  */
 
 public class ItemMapper {
-    public static Item toItem(ItemDto itemDto) {
+    public static Item mapToItem(ItemDto itemDto) {
         return Item.builder()
                 .id(itemDto.getId())
                 .name(itemDto.getName())
@@ -23,7 +23,7 @@ public class ItemMapper {
                 .build();
     }
 
-    public static Item toItem(ItemAllFieldsDto itemDto) {
+    public static Item mapToItem(ItemAllFieldsDto itemDto) {
         return Item.builder()
                 .id(itemDto.getId())
                 .name(itemDto.getName())
@@ -32,7 +32,7 @@ public class ItemMapper {
                 .build();
     }
 
-    public static ItemDto toItemDto(Item item) {
+    public static ItemDto mapToItemDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
                 .name(item.getName())
@@ -43,20 +43,20 @@ public class ItemMapper {
                 .build();
     }
 
-    public static ItemAllFieldsDto toItemAllFieldsDto(Item item,
-                                                      BookingAllFieldsDto lastBooking,
-                                                      BookingAllFieldsDto nextBooking,
-                                                      List<CommentDto> comments) {
-        return ItemAllFieldsDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .ownerId(item.getOwner() != null ? item.getOwner().getId() : null)
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .lastBooking(lastBooking != null ? new BookingDto(lastBooking.getId(), lastBooking.getBooker().getId()) : null)
-                .nextBooking(nextBooking != null ? new BookingDto(nextBooking.getId(), nextBooking.getBooker().getId()) : null)
-                .comments(comments != null ? comments : List.of())
-                .build();
+    public static ItemAllFieldsDto mapToItemAllFieldsDto(Item item,
+                                                         BookingAllFieldsDto lastBooking,
+                                                         BookingAllFieldsDto nextBooking,
+                                                         List<CommentDto> comments) {
+        return new ItemAllFieldsDto(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable(),
+                item.getOwner() != null ? item.getOwner().getId() : null,
+                item.getRequest() != null ? item.getRequest().getId() : null,
+                lastBooking != null ? new BookingDto(lastBooking.getId(), lastBooking.getBooker().getId()) : null,
+                nextBooking != null ? new BookingDto(nextBooking.getId(), nextBooking.getBooker().getId()) : null,
+                comments != null ? comments : List.of()
+        );
     }
 }

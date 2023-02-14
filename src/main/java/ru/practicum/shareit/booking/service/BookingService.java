@@ -12,15 +12,19 @@ import java.util.List;
 
 public interface BookingService {
 
+    List<BookingAllFieldsDto> getBookingsByOwnerId(Long userId, String state, Integer from, Integer size);
+
+    List<BookingAllFieldsDto> getAllBookings(Long bookerId, String state, Integer from, Integer size);
+
     BookingAllFieldsDto save(BookingSavingDto booking, ItemAllFieldsDto itemDto, Long bookerId);
 
     BookingAllFieldsDto approve(Long bookingId, boolean approved, Long userId);
 
-    List<BookingAllFieldsDto> getBookingsByOwner(Long userId, String state);
+    List<BookingAllFieldsDto> getBookingsByOwnerId(Long userId, String state);
 
     List<BookingAllFieldsDto> getBookingsByItem(Long itemId, Long userId);
 
-    List<BookingAllFieldsDto> getAll(Long bookerId, String state);
+    List<BookingAllFieldsDto> getAllBookings(Long bookerId, String state);
 
-    BookingAllFieldsDto get(Long bookingId, Long userId);
+    BookingAllFieldsDto getBookingById(Long bookingId, Long userId);
 }

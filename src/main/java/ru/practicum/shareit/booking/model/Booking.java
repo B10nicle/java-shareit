@@ -3,12 +3,10 @@ package ru.practicum.shareit.booking.model;
 import ru.practicum.shareit.booking.enums.BookingState;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
-import org.hibernate.Hibernate;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import javax.persistence.*;
-import java.util.Objects;
 
 import static javax.persistence.GenerationType.*;
 import static javax.persistence.EnumType.*;
@@ -46,17 +44,4 @@ public class Booking {
 
     @Enumerated(STRING)
     private BookingState status;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Booking booking = (Booking) o;
-        return id != null && Objects.equals(id, booking.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }
