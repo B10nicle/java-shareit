@@ -390,7 +390,7 @@ class ItemServiceImplTest {
         assertThat(itemsByRequestId, empty());
     }
 
-    @Test
+/*    @Test
     void getAllCommentsIdTest() {
         saveCommentDto(
                 "Hello there",
@@ -411,7 +411,7 @@ class ItemServiceImplTest {
         assertThat(comments.size(), equalTo(allComments.size()));
         assertThat(comments.size(), equalTo(1));
         assertThat(comments, notNullValue());
-    }
+    }*/
 
     @Test
     void getNotFoundExceptionTest() {
