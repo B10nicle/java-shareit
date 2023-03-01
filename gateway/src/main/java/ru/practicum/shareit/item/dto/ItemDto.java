@@ -14,13 +14,13 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 public class ItemDto {
-    private Integer id;
+    private Long id;
     @NotBlank(groups = Created.class, message = "Item name cannot be null")
     private String name;
     @NotBlank(groups = Created.class, message = "Item description cannot be null")
     private String description;
     @NotNull(groups = Created.class, message = "Available cannot be null")
     private Boolean available;
-    private Integer ownerId;
-    private Integer requestId;
+    private Long ownerId;
+    private Long requestId;
 }
