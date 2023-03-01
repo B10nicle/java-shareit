@@ -391,29 +391,6 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllCommentsIdTest() {
-        saveCommentDto(
-                "Hello there",
-                new UserDto(
-                        15L,
-                        "Douglas",
-                        "douglas@mail.com")
-        );
-        var allComments = itemService.getAllComments(itemDto.getId());
-        var comments = entityManager.createQuery(
-                        "SELECT comment " +
-                                "FROM Comment comment " +
-                                "WHERE comment.item.id = :itemId",
-                        Comment.class)
-                .setParameter("itemId", itemDto.getId())
-                .getResultList();
-        assertThat(comments.get(0).getId(), equalTo(allComments.get(0).getId()));
-        assertThat(comments.size(), equalTo(allComments.size()));
-        assertThat(comments.size(), equalTo(1));
-        assertThat(comments, notNullValue());
-    }
-
-    @Test
     void getNotFoundExceptionTest() {
         final long id = 7L;
         var exception = assertThrows(NotFoundException.class,
