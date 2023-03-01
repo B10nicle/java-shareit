@@ -15,20 +15,3 @@ services:
     image: server-image
     ports:
       - "9090:9090"
-    depends_on:
-      - db
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
-
-  db:
-    image: postgres:13.7-alpine
-    volumes:
-      - /var/lib/postgresql/data/
-    ports:
-      - "6541:5432"
-    environment:
-      - POSTGRES_DB=shareit
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
