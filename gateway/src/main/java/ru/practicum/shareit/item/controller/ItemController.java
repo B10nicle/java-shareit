@@ -32,7 +32,6 @@ public class ItemController {
                                               @RequestHeader(required = false, value = HEADER_SHARER_USER_ID) Long userId,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") Integer size,
                                               @NotNull @RequestParam(required = false) String text) {
-        if (userId == null) throw new IllegalArgumentException("Field userId is null");
         return itemClient.searchItems(text, userId, from, size);
     }
 
@@ -40,7 +39,6 @@ public class ItemController {
     public ResponseEntity<Object> getAllItems(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                               @RequestHeader(required = false, value = HEADER_SHARER_USER_ID) Long userId,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-        if (userId == null) throw new IllegalArgumentException("Field userId is null");
         return itemClient.getItems(userId, from, size);
     }
 
@@ -48,7 +46,6 @@ public class ItemController {
     public ResponseEntity<Object> updateItem(@RequestHeader(required = false, value = HEADER_SHARER_USER_ID) Long userId,
                                              @RequestBody ItemDto itemDto,
                                              @PathVariable Long itemId) {
-        if (userId == null) throw new IllegalArgumentException("Field userId is null");
         return itemClient.updateItem(itemDto, itemId, userId);
     }
 
@@ -56,7 +53,6 @@ public class ItemController {
     @Validated(Created.class)
     public ResponseEntity<Object> createItem(@RequestHeader(required = false, value = HEADER_SHARER_USER_ID) Long userId,
                                              @RequestBody @Valid ItemDto itemDto) {
-        if (userId == null) throw new IllegalArgumentException("Field userId is null");
         return itemClient.createItem(itemDto, userId);
     }
 
