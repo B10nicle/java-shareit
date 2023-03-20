@@ -1,4 +1,4 @@
-## Яндекс Практикум: проект "ShareIt"
+## Яндекс Практикум: проект "Share It"
 
 Технологии: Java + Spring Boot + Maven + Lombok + JUnit + RESTful API + Docker
 
