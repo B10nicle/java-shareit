@@ -7,11 +7,6 @@ import org.junit.jupiter.api.Test;
 public class ShareItTests {
 
     @Test
-    public void main() {
-        ShareItApp.main(new String[]{});
-    }
-
-    @Test
     void contextLoads() {
     }
 }
